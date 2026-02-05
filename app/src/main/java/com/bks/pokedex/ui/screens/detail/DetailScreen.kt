@@ -3,6 +3,7 @@ package com.bks.pokedex.ui.screens.detail
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -22,12 +24,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +51,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -98,10 +105,12 @@ fun DetailScreen(
                     .size(242.dp)
             )
 
-            Column(modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -131,146 +140,150 @@ fun DetailScreen(
 
                 Spacer(modifier = Modifier.height(180.dp))
 
-                Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(4.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    if (state.isLoading) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(color = themeColor)
-                        }
-                    } else {
-                        state.pokemon?.let { pokemon ->
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(top = 64.dp)
-                                    .verticalScroll(rememberScrollState()),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    pokemon.types.forEach { type ->
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(20.dp))
-                                                .background(PokemonColors.getColorForType(type))
-                                                .padding(horizontal = 16.dp, vertical = 6.dp)
-                                        ) {
-                                            Text(
-                                                text = type.replaceFirstChar { it.uppercase() },
-                                                color = Color.White,
-                                                style = MaterialTheme.typography.labelLarge
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(24.dp))
-
-                                Text(
-                                    text = "About",
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.titleLarge.copy(color = themeColor)
-                                )
-
-                                Row(
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        if (state.isLoading) {
+                            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(color = themeColor)
+                            }
+                        } else {
+                            state.pokemon?.let { pokemon ->
+                                Column(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 24.dp, vertical = 16.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Top
+                                        .fillMaxSize()
+                                        .padding(top = 64.dp)
+                                        .verticalScroll(rememberScrollState()),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    AboutInfoItem(
-                                        value = "${pokemon.weight / 10f} kg",
-                                        label = "Weight",
-                                        iconId = R.drawable.weight,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .height(64.dp)
-                                            .background(Color(0xFFE0E0E0))
-                                            .align(Alignment.CenterVertically)
-                                    )
-                                    AboutInfoItem(
-                                        value = "${pokemon.height / 10f} m",
-                                        label = "Height",
-                                        iconId = R.drawable.straighten,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .height(64.dp)
-                                            .background(Color(0xFFE0E0E0))
-                                            .align(Alignment.CenterVertically)
-                                    )
-
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Column(
-                                            modifier = Modifier.height(44.dp),
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
-                                            pokemon.abilities.forEach { ability ->
+                                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                        pokemon.types.forEach { type ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(20.dp))
+                                                    .background(PokemonColors.getColorForType(type))
+                                                    .padding(horizontal = 16.dp, vertical = 6.dp)
+                                            ) {
                                                 Text(
-                                                    text = ability.replaceFirstChar { it.uppercase() },
-                                                    style = MaterialTheme.typography.bodyLarge.copy(
-                                                        color = Color(0xFF1D1D1D)
-                                                    ),
-                                                    textAlign = TextAlign.Center
+                                                    text = type.replaceFirstChar { it.uppercase() },
+                                                    color = Color.White,
+                                                    style = MaterialTheme.typography.labelLarge
                                                 )
                                             }
                                         }
-                                        Spacer(modifier = Modifier.height(12.dp))
-                                        Text(
-                                            text = "Moves",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color.Gray
-                                        )
                                     }
-                                }
 
-                                Text(
-                                    text = pokemon.description,
-                                    modifier = Modifier.padding(
-                                        horizontal = 28.dp,
-                                        vertical = 12.dp
-                                    ),
-                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                    Spacer(modifier = Modifier.height(24.dp))
+
+                                    Text(
+                                        text = "About",
                                         textAlign = TextAlign.Center,
-                                        color = Color(0xFF1D1D1D)
+                                        style = MaterialTheme.typography.titleLarge.copy(color = themeColor)
                                     )
-                                )
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 24.dp, vertical = 16.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        AboutInfoItem(
+                                            value = "${pokemon.weight / 10f} kg",
+                                            label = "Weight",
+                                            iconId = R.drawable.weight,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .width(1.dp)
+                                                .height(64.dp)
+                                                .background(Color(0xFFE0E0E0))
+                                                .align(Alignment.CenterVertically)
+                                        )
+                                        AboutInfoItem(
+                                            value = "${pokemon.height / 10f} m",
+                                            label = "Height",
+                                            iconId = R.drawable.straighten,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .width(1.dp)
+                                                .height(64.dp)
+                                                .background(Color(0xFFE0E0E0))
+                                                .align(Alignment.CenterVertically)
+                                        )
 
-                                Text(
-                                    text = "Base Stats",
-                                    textAlign = TextAlign.Center,
-                                    style = MaterialTheme.typography.titleLarge.copy(color = themeColor)
-                                )
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.height(44.dp),
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                pokemon.abilities.forEach { ability ->
+                                                    Text(
+                                                        text = ability.replaceFirstChar { it.uppercase() },
+                                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                                            color = Color(0xFF1D1D1D)
+                                                        ),
+                                                        textAlign = TextAlign.Center
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            Text(
+                                                text = "Moves",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    }
 
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = 24.dp,
-                                        vertical = 20.dp
+                                    Text(
+                                        text = pokemon.description,
+                                        modifier = Modifier.padding(
+                                            horizontal = 28.dp,
+                                            vertical = 12.dp
+                                        ),
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            textAlign = TextAlign.Center,
+                                            color = Color(0xFF1D1D1D)
+                                        )
                                     )
-                                ) {
-                                    pokemon.stats.forEach { stat ->
-                                        StatRow(stat.name, stat.value, themeColor)
+
+                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                    Text(
+                                        text = "Base Stats",
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.titleLarge.copy(color = themeColor)
+                                    )
+
+                                    Column(
+                                        modifier = Modifier.padding(
+                                            horizontal = 24.dp,
+                                            vertical = 20.dp
+                                        )
+                                    ) {
+                                        pokemon.stats.forEach { stat ->
+                                            StatRow(stat.name, stat.value, themeColor)
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+
                 }
             }
 
@@ -285,8 +298,10 @@ fun DetailScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
                     .align(Alignment.TopCenter)
-                    .padding(top = 100.dp)
+                    .padding(top = 76.dp)
             ) {
                 HorizontalPager(
                     state = pagerState,
@@ -362,6 +377,31 @@ fun DetailScreen(
                         )
                     }
                 }
+
+                state.pokemon?.let { pokemon ->
+                    val heartScale by animateFloatAsState(
+                        targetValue = if (pokemon.isFavorite) 1.1f else 1.0f,
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "heartScale"
+                    )
+                    SmallFloatingActionButton(
+                        onClick = { viewModel.onIntent(DetailContract.Intent.ToggleFavorite) },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(end = 20.dp)
+                            .offset(y = (146).dp)
+                            .scale(heartScale),
+                        shape = CircleShape,
+                        containerColor = Color.White,
+                        contentColor = if (pokemon.isFavorite) themeColor else Color.LightGray
+                    ) {
+                        Icon(
+                            imageVector = if (pokemon.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favorite",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -407,10 +447,12 @@ fun StatRow(name: String, value: Int, color: Color) {
             modifier = Modifier.width(48.dp),
             style = MaterialTheme.typography.labelLarge.copy(color = color)
         )
-        Box(modifier = Modifier
-            .width(1.dp)
-            .height(20.dp)
-            .background(Color(0xFFE0E0E0)))
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .height(20.dp)
+                .background(Color(0xFFE0E0E0))
+        )
         Spacer(modifier = Modifier.width(16.dp))
         Text(
             text = value.toString().padStart(3, '0'),
@@ -422,7 +464,7 @@ fun StatRow(name: String, value: Int, color: Color) {
             progress = { value / 255f },
             modifier = Modifier
                 .weight(1f)
-                .height(5.dp)
+                .height(4.dp)
                 .clip(RoundedCornerShape(2.dp)),
             color = color,
             trackColor = color.copy(alpha = 0.2f)

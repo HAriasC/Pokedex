@@ -14,14 +14,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -52,7 +50,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,15 +70,13 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    val pagingItems = state.pokemonPagingData?.collectAsLazyPagingItems()
+    val pagingItems = viewModel.pokemonPagingData.collectAsLazyPagingItems()
     val haptic = LocalHapticFeedback.current
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is HomeContract.Effect.NavigateToDetail -> {
-                }
-
+                is HomeContract.Effect.NavigateToDetail -> {}
                 HomeContract.Effect.NavigateToFavorites -> onNavigateToFavorites()
             }
         }
@@ -91,13 +86,10 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFFDC0A2D)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -198,21 +190,21 @@ fun HomeScreen(
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    if (pagingItems != null) {
-                        val filteredAndSortedItems = (0 until pagingItems.itemCount)
-                            .mapNotNull { pagingItems[it] }
-                            .filter {
-                                state.searchQuery.isEmpty() || it.name.contains(
-                                    state.searchQuery,
-                                    ignoreCase = true
-                                )
-                            }
-                            .sortedWith { a, b ->
-                                if (state.sortType == HomeContract.SortType.NAME) a.name.compareTo(b.name)
-                                else a.id.compareTo(b.id)
+                    if (pagingItems.itemCount > 0 || pagingItems.loadState.refresh is LoadState.NotLoading) {
+                        val sortedIndices =
+                            (0 until pagingItems.itemCount).toList().sortedWith { a, b ->
+                                val pokemonA = pagingItems[a]
+                                val pokemonB = pagingItems[b]
+                                if (pokemonA != null && pokemonB != null) {
+                                    if (state.sortType == HomeContract.SortType.NAME) {
+                                        pokemonA.name.compareTo(pokemonB.name)
+                                    } else {
+                                        pokemonA.id.compareTo(pokemonB.id)
+                                    }
+                                } else 0
                             }
 
-                        if (filteredAndSortedItems.isEmpty() && pagingItems.loadState.refresh is LoadState.NotLoading) {
+                        if (sortedIndices.isEmpty() && pagingItems.loadState.refresh is LoadState.NotLoading) {
                             EmptyState(modifier = Modifier.align(Alignment.Center))
                         } else {
                             LazyVerticalGrid(
@@ -220,23 +212,30 @@ fun HomeScreen(
                                 contentPadding = PaddingValues(8.dp),
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                items(
-                                    items = filteredAndSortedItems,
-                                    key = { it.id },
-                                    contentType = { "pokemon_card" }
-                                ) { pokemon ->
-                                    PokemonCard(
-                                        pokemon = pokemon,
-                                        sharedTransitionScope = sharedTransitionScope,
-                                        animatedVisibilityScope = animatedVisibilityScope,
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            onNavigateToDetail(
-                                                pokemon.name.lowercase(),
-                                                pokemon.id
-                                            )
-                                        }
-                                    )
+                                items(sortedIndices.size) { index ->
+                                    val realIndex = sortedIndices[index]
+                                    val pokemon = pagingItems[realIndex]
+                                    if (pokemon != null) {
+                                        PokemonCard(
+                                            pokemon = pokemon,
+                                            sharedTransitionScope = sharedTransitionScope,
+                                            animVisibilityScope = animatedVisibilityScope,
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                                onNavigateToDetail(
+                                                    pokemon.name.lowercase(),
+                                                    pokemon.id
+                                                )
+                                            },
+                                            onToggleFavorite = {
+                                                viewModel.onIntent(
+                                                    HomeContract.Intent.OnToggleFavorite(
+                                                        pokemon.id
+                                                    )
+                                                )
+                                            }
+                                        )
+                                    }
                                 }
 
                                 if (pagingItems.loadState.append is LoadState.Loading) {
@@ -256,13 +255,13 @@ fun HomeScreen(
                                 }
                             }
                         }
+                    }
 
-                        if (pagingItems.loadState.refresh is LoadState.Loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.Center),
-                                color = Color(0xFFDC0A2D)
-                            )
-                        }
+                    if (pagingItems.loadState.refresh is LoadState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = Color(0xFFDC0A2D)
+                        )
                     }
                 }
             }
@@ -327,10 +326,7 @@ fun SortDialog(
             ) {
                 Text(
                     text = "Sort by:",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    ),
+                    style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -411,12 +407,12 @@ fun ErrorState(
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Ops! Something went wrong",
-            style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFFDC0A2D)
+            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFFDC0A2D)),
+            textAlign = TextAlign.Center
         )
         Text(
             text = message,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(8.dp))
