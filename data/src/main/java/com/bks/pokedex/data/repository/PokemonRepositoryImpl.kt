@@ -1,8 +1,12 @@
 package com.bks.pokedex.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.bks.pokedex.data.local.PokemonDao
 import com.bks.pokedex.data.mapper.toDomain
 import com.bks.pokedex.data.mapper.toFavoriteEntity
+import com.bks.pokedex.data.paging.PokemonPagingSource
 import com.bks.pokedex.data.remote.PokeApi
 import com.bks.pokedex.domain.model.Pokemon
 import com.bks.pokedex.domain.model.PokemonDetail
@@ -16,21 +20,26 @@ class PokemonRepositoryImpl @Inject constructor(
     private val dao: PokemonDao
 ) : PokemonRepository {
 
-    override suspend fun getPokemonList(limit: Int, offset: Int): Result<List<Pokemon>> {
-        return try {
-            val response = api.getPokemonList(limit, offset)
-            val pokemonList = response.results.map { it.toDomain() }
-            Result.success(pokemonList)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    override fun getPokemonPagingData(): Flow<PagingData<Pokemon>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { PokemonPagingSource(api) }
+        ).flow
     }
 
     override suspend fun getPokemonDetail(name: String): Result<PokemonDetail> {
         return try {
             val response = api.getPokemonDetail(name)
+            val species = try {
+                api.getPokemonSpecies(response.id)
+            } catch (e: Exception) {
+                null
+            }
             val isFavorite = dao.isFavorite(response.id)
-            Result.success(response.toDomain(isFavorite))
+            Result.success(response.toDomain(isFavorite, species))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -42,9 +51,6 @@ class PokemonRepositoryImpl @Inject constructor(
             val favorite = dao.getFavoriteById(pokemonId)
             favorite?.let { dao.deleteFavorite(it) }
         } else {
-            // We need the basic info to save it. For simplicity, we can fetch it if not available
-            // but in a real app we might have it from the list or detail.
-            // Here we'll fetch the detail to get the full info for the favorite entity
             try {
                 val detail = api.getPokemonDetail(pokemonId.toString())
                 dao.insertFavorite(detail.toDomain(true).toFavoriteEntity())

@@ -16,4 +16,9 @@ kotlin {
 dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
+    // Paging (Common library for pure Kotlin modules)
+    implementation(libs.paging.common)
+    
+    // Dependency Injection
+    implementation(libs.javax.inject)
 }
