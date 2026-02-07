@@ -85,7 +85,9 @@ fun PokemonCard(
             .shadow(elevation = 3.dp, shape = RoundedCornerShape(8.dp))
             .pointerInput(pokemon.id) {
                 detectTapGestures(
-                    onTap = { onClick() },
+                    onTap = {
+                        onClick()
+                    },
                     onDoubleTap = {
                         isRemovingAnimation = isCurrentlyFavorite
                         if (isRemovingAnimation) {
@@ -104,15 +106,17 @@ fun PokemonCard(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
                     Text(
                         text = "#${pokemon.id.toString().padStart(3, '0')}",
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(top = 4.dp, end = 8.dp),
-                        style = MaterialTheme.typography.labelMedium.copy(
+                        style = MaterialTheme.typography.labelSmall.copy(
                             color = Color(0xFF666666),
                             fontSize = 8.sp
                         )
@@ -129,7 +133,7 @@ fun PokemonCard(
                             modifier = Modifier
                                 .sharedElement(
                                     rememberSharedContentState(key = "image-${pokemon.id}"),
-                                    animatedVisibilityScope = animVisibilityScope
+                                    animVisibilityScope
                                 )
                                 .size(72.dp)
                                 .align(Alignment.Center)

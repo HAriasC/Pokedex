@@ -11,6 +11,7 @@ interface DetailContract {
 
     sealed class Intent {
         data class LoadPokemon(val name: String) : Intent()
+        object Retry : Intent()
         object ToggleFavorite : Intent()
         object OnBackClick : Intent()
     }

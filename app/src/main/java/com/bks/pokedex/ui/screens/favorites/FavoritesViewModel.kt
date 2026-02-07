@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bks.pokedex.domain.model.Pokemon
 import com.bks.pokedex.domain.usecase.GetFavoritePokemonUseCase
+import com.bks.pokedex.domain.usecase.LogoutUseCase
 import com.bks.pokedex.domain.usecase.ToggleFavoriteUseCase
 import com.bks.pokedex.ui.screens.home.HomeContract
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,22 +20,26 @@ import javax.inject.Inject
 @HiltViewModel
 class FavoritesViewModel @Inject constructor(
     private val getFavoritePokemonUseCase: GetFavoritePokemonUseCase,
-    private val toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     private val _sortType = MutableStateFlow(HomeContract.SortType.NUMBER)
     private val _isSortMenuVisible = MutableStateFlow(false)
+    private val _isLoggingOut = MutableStateFlow(false)
 
     val state: StateFlow<HomeContract.State> = combine(
         _searchQuery,
         _sortType,
-        _isSortMenuVisible
-    ) { query, sort, isMenuVisible ->
+        _isSortMenuVisible,
+        _isLoggingOut
+    ) { query, sort, isMenuVisible, isLoggingOut ->
         HomeContract.State(
             searchQuery = query,
             sortType = sort,
-            isSortMenuVisible = isMenuVisible
+            isSortMenuVisible = isMenuVisible,
+            isLoggingOut = isLoggingOut
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HomeContract.State())
 
@@ -61,6 +67,14 @@ class FavoritesViewModel @Inject constructor(
             is HomeContract.Intent.OnToggleFavorite -> {
                 viewModelScope.launch {
                     toggleFavoriteUseCase(intent.pokemonId)
+                }
+            }
+
+            is HomeContract.Intent.OnLogoutClick -> {
+                viewModelScope.launch {
+                    _isLoggingOut.value = true
+                    delay(2000)
+                    logoutUseCase()
                 }
             }
 

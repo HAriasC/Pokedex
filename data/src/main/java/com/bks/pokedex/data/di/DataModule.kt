@@ -5,7 +5,9 @@ import androidx.room.Room
 import com.bks.pokedex.data.local.PokemonDao
 import com.bks.pokedex.data.local.PokemonDatabase
 import com.bks.pokedex.data.remote.PokeApi
+import com.bks.pokedex.data.repository.AuthRepositoryImpl
 import com.bks.pokedex.data.repository.PokemonRepositoryImpl
+import com.bks.pokedex.domain.repository.AuthRepository
 import com.bks.pokedex.domain.repository.PokemonRepository
 import dagger.Module
 import dagger.Provides
@@ -50,7 +52,9 @@ object DataModule {
             context,
             PokemonDatabase::class.java,
             "pokemon_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -63,8 +67,17 @@ object DataModule {
     @Singleton
     fun providePokemonRepository(
         api: PokeApi,
-        dao: PokemonDao
+        dao: PokemonDao,
+        db: PokemonDatabase
     ): PokemonRepository {
-        return PokemonRepositoryImpl(api, dao)
+        return PokemonRepositoryImpl(api, dao, db)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        @ApplicationContext context: Context
+    ): AuthRepository {
+        return AuthRepositoryImpl(context)
     }
 }

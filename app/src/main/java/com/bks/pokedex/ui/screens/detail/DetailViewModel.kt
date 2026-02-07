@@ -27,14 +27,15 @@ class DetailViewModel @Inject constructor(
     private val _effect = Channel<DetailContract.Effect>()
     val effect = _effect.receiveAsFlow()
 
+    private val pokemonName: String? = savedStateHandle["pokemonName"]
+
     init {
-        val pokemonName: String? = savedStateHandle["pokemonName"]
         pokemonName?.let { loadPokemon(it) }
     }
 
     private fun loadPokemon(name: String) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isLoading = true, error = null) }
             getPokemonDetailUseCase(name)
                 .onSuccess { pokemon ->
                     _state.update { it.copy(isLoading = false, pokemon = pokemon, error = null) }
@@ -48,6 +49,10 @@ class DetailViewModel @Inject constructor(
     fun onIntent(intent: DetailContract.Intent) {
         when (intent) {
             is DetailContract.Intent.LoadPokemon -> loadPokemon(intent.name)
+            DetailContract.Intent.Retry -> {
+                pokemonName?.let { loadPokemon(it) }
+            }
+
             DetailContract.Intent.ToggleFavorite -> {
                 viewModelScope.launch {
                     val currentPokemon = _state.value.pokemon ?: return@launch

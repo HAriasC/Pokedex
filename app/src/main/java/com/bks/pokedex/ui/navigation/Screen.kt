@@ -1,10 +1,11 @@
 package com.bks.pokedex.ui.navigation
 
 sealed class Screen(val route: String) {
+    object Login : Screen("login")
     object Home : Screen("home")
-    object Detail : Screen("detail/{pokemonName}") {
-        fun createRoute(pokemonName: String) = "detail/$pokemonName"
-    }
-
     object Favorites : Screen("favorites")
+
+    object Detail : Screen("detail/{pokemonName}/{pokemonId}") {
+        fun createRoute(name: String, id: Int) = "detail/$name/$id"
+    }
 }

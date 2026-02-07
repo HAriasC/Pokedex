@@ -71,6 +71,9 @@ dependencies {
     // Paging
     implementation(libs.paging.compose)
 
+    // Biometric
+    implementation(libs.biometric)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

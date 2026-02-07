@@ -38,6 +38,9 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.room.paging)
 
+    // DataStore
+    implementation(libs.datastore.preferences)
+
     // Paging
     implementation(libs.paging.runtime)
 
