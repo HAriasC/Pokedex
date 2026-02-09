@@ -6,7 +6,8 @@ interface DetailContract {
     data class State(
         val isLoading: Boolean = false,
         val pokemon: PokemonDetail? = null,
-        val error: String? = null
+        val error: String? = null,
+        val isEvolutionDialogOpen: Boolean = false
     )
 
     sealed class Intent {
@@ -14,9 +15,12 @@ interface DetailContract {
         object Retry : Intent()
         object ToggleFavorite : Intent()
         object OnBackClick : Intent()
+        object ToggleEvolutionDialog : Intent()
+        data class OnEvolutionClick(val name: String) : Intent()
     }
 
     sealed class Effect {
         object NavigateBack : Effect()
+        data class NavigateToPokemon(val name: String) : Effect()
     }
 }

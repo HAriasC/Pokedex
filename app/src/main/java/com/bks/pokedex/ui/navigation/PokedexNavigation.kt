@@ -90,6 +90,9 @@ fun PokedexNavHost(
                     animatedVisibilityScope = this@composable,
                     onNavigateBack = {
                         navController.popBackStack()
+                    },
+                    onNavigateToPokemon = { newName ->
+                        navController.navigate(Screen.Detail.createRoute(newName.lowercase(), 0))
                     }
                 )
             }

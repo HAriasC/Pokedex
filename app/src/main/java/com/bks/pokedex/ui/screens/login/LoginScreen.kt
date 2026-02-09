@@ -7,7 +7,10 @@ import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -38,6 +42,7 @@ fun LoginScreen(
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val rotation = remember { Animatable(0f) }
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -55,44 +60,77 @@ fun LoginScreen(
         )
     }
 
-    Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFFDC0A2D)) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LoginHeader(
-                    rotationValue = rotation.value,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animVisibilityScope = animVisibilityScope
-                )
+    val backgroundBrush = Brush.radialGradient(
+        colors = listOf(Color(0xFFE33545), Color(0xFFDC0A2D)),
+        center = androidx.compose.ui.geometry.Offset(x = 500f, y = 200f),
+        radius = 1500f
+    )
 
-                Spacer(modifier = Modifier.height(40.dp))
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundBrush)
+        ) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val screenHeight = maxHeight
 
-                LoginForm(
-                    user = state.user,
-                    pass = state.pass,
-                    error = state.error,
-                    isLoading = state.isLoading,
-                    onUserChange = { viewModel.onIntent(LoginContract.Intent.OnUserChange(it)) },
-                    onPassChange = { viewModel.onIntent(LoginContract.Intent.OnPassChange(it)) },
-                    onLoginClick = {
-                        focusManager.clearFocus()
-                        viewModel.onIntent(LoginContract.Intent.OnLoginClick)
-                    },
-                    onBiometricClick = {
-                        val fragmentActivity = context as? FragmentActivity
-                        if (fragmentActivity != null) {
-                            handleBiometricLogin(fragmentActivity) {
-                                viewModel.onIntent(LoginContract.Intent.OnBiometricLoginClick)
-                            }
-                        }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .statusBarsPadding()
+                        .navigationBarsPadding(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = screenHeight),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        LoginHeader(
+                            rotationValue = rotation.value,
+                            sharedTransitionScope = sharedTransitionScope,
+                            animVisibilityScope = animVisibilityScope
+                        )
+
+                        Spacer(modifier = Modifier.height(40.dp))
+
+                        LoginForm(
+                            user = state.user,
+                            pass = state.pass,
+                            error = state.error,
+                            isLoading = state.isLoading,
+                            onUserChange = { viewModel.onIntent(LoginContract.Intent.OnUserChange(it)) },
+                            onPassChange = { viewModel.onIntent(LoginContract.Intent.OnPassChange(it)) },
+                            onLoginClick = {
+                                focusManager.clearFocus()
+                                viewModel.onIntent(LoginContract.Intent.OnLoginClick)
+                            },
+                            onBiometricClick = {
+                                val fragmentActivity = context as? FragmentActivity
+                                if (fragmentActivity != null) {
+                                    handleBiometricLogin(fragmentActivity) {
+                                        viewModel.onIntent(LoginContract.Intent.OnBiometricLoginClick)
+                                    }
+                                }
+                            },
+                            isBiometricAvailable = state.isBiometricAvailable
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        LoginFooter()
+
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                LoginFooter()
+                }
             }
 
             if (state.isLoading) {

@@ -49,7 +49,7 @@ fun PokemonCarousel(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(top = 76.dp)
+            .padding(top = 72.dp)
     ) {
         HorizontalPager(
             state = pagerState,

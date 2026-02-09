@@ -27,16 +27,16 @@ class DetailViewModel @Inject constructor(
     private val _effect = Channel<DetailContract.Effect>()
     val effect = _effect.receiveAsFlow()
 
-    private val pokemonName: String? = savedStateHandle["pokemonName"]
+    private val initialPokemonName: String? = savedStateHandle["pokemonName"]
 
     init {
-        pokemonName?.let { loadPokemon(it) }
+        initialPokemonName?.let { loadPokemon(it) }
     }
 
     private fun loadPokemon(name: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            getPokemonDetailUseCase(name)
+            getPokemonDetailUseCase(name.lowercase())
                 .onSuccess { pokemon ->
                     _state.update { it.copy(isLoading = false, pokemon = pokemon, error = null) }
                 }
@@ -50,14 +50,14 @@ class DetailViewModel @Inject constructor(
         when (intent) {
             is DetailContract.Intent.LoadPokemon -> loadPokemon(intent.name)
             DetailContract.Intent.Retry -> {
-                pokemonName?.let { loadPokemon(it) }
+                _state.value.pokemon?.name?.let { loadPokemon(it) }
+                    ?: initialPokemonName?.let { loadPokemon(it) }
             }
 
             DetailContract.Intent.ToggleFavorite -> {
                 viewModelScope.launch {
                     val currentPokemon = _state.value.pokemon ?: return@launch
                     toggleFavoriteUseCase(currentPokemon.id)
-                    // Update local state for immediate feedback
                     _state.update { it.copy(pokemon = currentPokemon.copy(isFavorite = !currentPokemon.isFavorite)) }
                 }
             }
@@ -65,6 +65,17 @@ class DetailViewModel @Inject constructor(
             DetailContract.Intent.OnBackClick -> {
                 viewModelScope.launch {
                     _effect.send(DetailContract.Effect.NavigateBack)
+                }
+            }
+
+            DetailContract.Intent.ToggleEvolutionDialog -> {
+                _state.update { it.copy(isEvolutionDialogOpen = !it.isEvolutionDialogOpen) }
+            }
+
+            is DetailContract.Intent.OnEvolutionClick -> {
+                viewModelScope.launch {
+                    _state.update { it.copy(isEvolutionDialogOpen = false) }
+                    _effect.send(DetailContract.Effect.NavigateToPokemon(intent.name))
                 }
             }
         }

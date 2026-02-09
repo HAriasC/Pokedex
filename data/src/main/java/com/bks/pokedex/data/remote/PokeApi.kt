@@ -1,11 +1,13 @@
 package com.bks.pokedex.data.remote
 
+import com.bks.pokedex.data.remote.dto.EvolutionChainDto
 import com.bks.pokedex.data.remote.dto.PokemonDetailDto
 import com.bks.pokedex.data.remote.dto.PokemonListDto
 import com.bks.pokedex.data.remote.dto.PokemonSpeciesDto
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 interface PokeApi {
 
@@ -24,6 +26,11 @@ interface PokeApi {
     suspend fun getPokemonSpecies(
         @Path("id") id: Int
     ): PokemonSpeciesDto
+
+    @GET
+    suspend fun getEvolutionChain(
+        @Url url: String
+    ): EvolutionChainDto
 
     companion object {
         const val BASE_URL = "https://pokeapi.co/api/v2/"

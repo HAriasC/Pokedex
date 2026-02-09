@@ -28,6 +28,8 @@ dependencies {
     // Network
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     ksp(libs.moshi.kotlin.codegen)
@@ -38,11 +40,11 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.room.paging)
 
-    // DataStore
-    implementation(libs.datastore.preferences)
-
     // Paging
     implementation(libs.paging.runtime)
+
+    // Security
+    implementation(libs.androidx.security.crypto)
 
     // Hilt
     implementation(libs.hilt.android)

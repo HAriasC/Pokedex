@@ -10,10 +10,18 @@ data class PokemonDetail(
     val weight: Int,
     val height: Int,
     val description: String = "",
-    var isFavorite: Boolean = false
+    var isFavorite: Boolean = false,
+    val evolutionChain: Evolution? = null
 )
 
 data class Stat(
     val name: String,
     val value: Int
+)
+
+data class Evolution(
+    val id: Int,
+    val name: String,
+    val imageUrl: String,
+    val evolvesTo: List<Evolution> = emptyList()
 )

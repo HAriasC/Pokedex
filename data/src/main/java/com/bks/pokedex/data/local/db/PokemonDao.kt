@@ -1,4 +1,4 @@
-package com.bks.pokedex.data.local
+package com.bks.pokedex.data.local.db
 
 import androidx.paging.PagingSource
 import androidx.room.Dao
@@ -7,6 +7,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.bks.pokedex.data.local.entity.FavoritePokemonEntity
+import com.bks.pokedex.data.local.entity.PokemonDetailEntity
 import com.bks.pokedex.data.local.entity.PokemonEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -39,4 +40,13 @@ interface PokemonDao {
 
     @Query("DELETE FROM pokemon_list")
     suspend fun clearAllPokemon()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPokemonDetail(detail: PokemonDetailEntity)
+
+    @Query("SELECT * FROM pokemon_details WHERE name = :name")
+    suspend fun getPokemonDetailByName(name: String): PokemonDetailEntity?
+
+    @Query("SELECT * FROM pokemon_details WHERE id = :id")
+    suspend fun getPokemonDetailById(id: Int): PokemonDetailEntity?
 }

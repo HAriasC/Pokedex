@@ -5,7 +5,13 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class PokemonSpeciesDto(
-    @field:Json(name = "flavor_text_entries") val flavorTextEntries: List<FlavorTextEntryDto>
+    @field:Json(name = "flavor_text_entries") val flavorTextEntries: List<FlavorTextEntryDto>,
+    @field:Json(name = "evolution_chain") val evolutionChain: EvolutionChainUrlDto?
+)
+
+@JsonClass(generateAdapter = true)
+data class EvolutionChainUrlDto(
+    @field:Json(name = "url") val url: String
 )
 
 @JsonClass(generateAdapter = true)

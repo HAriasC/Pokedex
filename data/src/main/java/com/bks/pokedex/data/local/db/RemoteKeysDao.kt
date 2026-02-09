@@ -1,4 +1,4 @@
-package com.bks.pokedex.data.local
+package com.bks.pokedex.data.local.db
 
 import androidx.room.Dao
 import androidx.room.Insert

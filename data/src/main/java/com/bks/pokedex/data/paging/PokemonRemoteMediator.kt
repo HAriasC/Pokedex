@@ -5,7 +5,7 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
-import com.bks.pokedex.data.local.PokemonDatabase
+import com.bks.pokedex.data.local.db.PokemonDatabase
 import com.bks.pokedex.data.local.entity.PokemonEntity
 import com.bks.pokedex.data.local.entity.RemoteKeys
 import com.bks.pokedex.data.mapper.toEntity
