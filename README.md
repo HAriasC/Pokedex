@@ -2,6 +2,9 @@
 
 Esta aplicación es una enciclopedia Pokémon desarrollada con tecnologías modernas de Android, enfocada en la escalabilidad, seguridad y buenas prácticas de ingeniería de software.
 
+> [!IMPORTANT]
+> **📲 [Descargar APK de la última versión](https://github.com/HAriasC/Pokedex/releases/latest)**
+
 ## 🏗 Arquitectura
 
 El proyecto sigue los principios de **Clean Architecture** y está dividido en tres módulos principales para garantizar la separación de preocupaciones y facilitar las pruebas:
